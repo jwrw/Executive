@@ -1,1 +1,15 @@
 # Executive
+
+An Arduino library to run tasks on a regular, timed basis.
+
+There seem to be a few similar libraries, but none seemed to be quite right for what I wanted.
+
+See the Examples for how to use but here's a summary.
+
+a) Set up a list of all the functions that you wnat called and the time schedule on which you want them to be called.  I was really thinking about tasks that need to be run every few ms, or possibly every few seconds.  The timing will not be exact, as it relies on your code calling the scheduler on a regular basis and on your routnes not taking a lot of time.  (i.e. if you have a routine that needs to be called every 20ms but you have another routine called every 1000ms but that runs for 500ms then the 20ms routine will not get called every 20ms.
+
+b) Call the Exec.delay() or Exec.run() functions on a regular basis (as oftem as you can)
+
+c) The appropriate scheduled functions will be called during your Exec.delay() or Exec.run() functions.
+
+d) Enjoy
