@@ -9,12 +9,12 @@
 
 //------------------------------------------------------------------------------
 struct taskEntry {
-	long lastRun_ms;
-	long interval_ms;
+	unsigned long lastRun_ms;
+	unsigned long interval_ms;
 	void *doTask();
 } tasks[DEFAULT_MAX_TASK_ENTRIES];
 
-int nTasks;
+int nTasks = 0;
 
 //------------------------------------------------------------------------------
 /**
@@ -75,7 +75,25 @@ void Executive::yield(void) {
  * @param delay_ms
  */
 void Executive::delay(long delay_ms) {
-	if(delay_ms < MIN_YIELD_TIME_MS) {
+	unsigned long sinceLast_ms;
+	unsigned long next_ms;
+	unsigned long nearestNext_ms;
+	int nearestNextTask;
+
+	for(int i=0; i<nTasks; i++) {
+		sinceLast_ms = millis() - tasks[i].lastRun_ms;
+		if(sinceLast_ms>=tasks[i].interval_ms) {
+			tasks[i].lastRun_ms = millis();
+			tasks[i].doTask();
+		} else {
+			next_ms = tasks[i].lastRun_ms + tasks[i].interval_ms;
+			if(next_ms-millis() < nearestNext_ms-millis()) {
+				nearestNext_ms = next_ms;
+				nearestNextTask = i;
+			}
+		}
+
+
 
 	}
 
