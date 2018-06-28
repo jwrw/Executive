@@ -12,7 +12,7 @@ struct TaskEntry {
 	unsigned long lastRun_ms;
 	unsigned long interval_ms;
 	void *doTask();
-} *tasks;
+}*tasks;
 
 int nTasks = 0;
 
@@ -30,14 +30,14 @@ Executive::Executive() {
  * @param maxTasks
  */
 Executive::Executive(int maxTasks) {
-	tasks = malloc(sizeof *tasks * maxTasks);
+	tasks = new struct TaskEntry[maxTasks];
 }
 
 //------------------------------------------------------------------------------
 /**
  */
 Executive::~Executive() {
-	free(tasks);
+	delete [] tasks;
 }
 
 //------------------------------------------------------------------------------
@@ -49,33 +49,18 @@ Executive::~Executive() {
  * @param doTask The routine called to do the task
  * @return An index to the task or -1 if task could not be added (no room left in task table)
  */
-int Executive::addTask(long timeToNext_ms, long interval_ms, void doTask(void)) {
-	int taskNo = addTask(interval_ms, doTask);
-	if(taskNo<0) return taskNo;
-
-	tasks[taskNo].lastRun_ms = (timeToNext_ms>=interval_ms) ? millis() : millis() - (interval_ms - timeToNext_ms);
-	return 0;
-}
-
-//------------------------------------------------------------------------------
-/**
- *
- * @param interval_ms Interval between successive runs of the task
- * @param doTask The routine called to do the task
- * @return An index to the task or -1 if task could not be added (no room left in task table)
- */
-int Executive::addTask(long interval_ms, void doTask(void)) {
-	// TODO - tasks should really be sorted with shortest interval first
-	if(nTasks< (sizeof tasks / sizeof tasks[0])) {
-		tasks[nTasks].lastRun_ms = millis();
+int Executive::addTask(unsigned long interval_ms, void &doTask(void),
+		unsigned long timeToNext_ms = 0) {
+	if (nTasks < (sizeof tasks / sizeof tasks[0])) {
 		tasks[nTasks].interval_ms = interval_ms;
-		tasks[nTasks].doTask = doTask;
-
+		tasks[nTasks].doTask = &doTask;
+		tasks[nTasks].lastRun_ms =
+				(timeToNext_ms >= interval_ms) ?
+						millis() : millis() - (interval_ms - timeToNext_ms);
 		return nTasks++;
 	} else {
-		return -1;	// table is full
+		return -1;
 	}
-
 }
 
 //------------------------------------------------------------------------------
@@ -83,7 +68,7 @@ int Executive::addTask(long interval_ms, void doTask(void)) {
  *
  */
 void Executive::yield(void) {
-	delay(MIN_YIELD_TIME_MS);
+	Executive::delay(MIN_YIELD_TIME_MS);
 }
 
 //------------------------------------------------------------------------------
@@ -92,28 +77,39 @@ void Executive::yield(void) {
  * @param delay_ms
  */
 void Executive::delay(long delay_ms) {
-	unsigned long sinceLast_ms;
-	unsigned long next_ms;
-	unsigned long nearestNext_ms;
-	int nearestNextTask;
+	volatile unsigned long start_ms = millis();
 
-	for(int i=0; i<nTasks; i++) {
-		sinceLast_ms = millis() - tasks[i].lastRun_ms;
-		if(sinceLast_ms>=tasks[i].interval_ms) {
-			tasks[i].lastRun_ms = millis();
-			tasks[i].doTask();
-		} else {
-			next_ms = tasks[i].lastRun_ms + tasks[i].interval_ms;
-			if(next_ms-millis() < nearestNext_ms-millis()) {
-				nearestNext_ms = next_ms;
-				nearestNextTask = i;
+	bool taskWasRun;
+	do {
+		taskWasRun = false;
+		unsigned long nearestNext_ms = millis() + tasks[0].interval_ms;
+
+		for (int i = 0; i < nTasks; i++) {
+			unsigned long sinceLast_ms = millis() - tasks[i].lastRun_ms;
+			if (sinceLast_ms >= tasks[i].interval_ms) {
+				tasks[i].lastRun_ms = millis();
+				tasks[i].doTask();
+				taskWasRun = true;
+				yield();
+				break;
+			} else {
+				unsigned long next_ms = tasks[i].lastRun_ms
+						+ tasks[i].interval_ms;
+				unsigned long current_ms = millis();
+				if (next_ms - current_ms < nearestNext_ms - current_ms) {
+					nearestNext_ms = next_ms;
+				}
 			}
 		}
-
-
-
-	}
+		unsigned long timeToNext_ms = nearestNext_ms - millis();
+		unsigned long remaining_ms = millis() - start_ms;
+		if (timeToNext_ms < remaining_ms) {
+			delay(timeToNext_ms);
+		} else {
+			delay(remaining_ms);
+			break;
+		}
+	} while (taskWasRun);
 
 }
-
 

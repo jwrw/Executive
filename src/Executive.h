@@ -1,5 +1,5 @@
 /*
- * Executive.h
+ * executive.h
  *
  *  Created on: 26 Jun 2018
  *      Author: jim
@@ -18,8 +18,8 @@ public:
 	Executive(int maxTasks);
 	~Executive();
 
-	int addTask(long timeToNext_ms, long interval_ms, void doTask(void));
-	int addTask(long interval_ms, void doTask(void));
+	int addTask(unsigned long interval_ms, void doTask(void), unsigned long timeToNext_ms);
+	int addTask(unsigned long interval_ms, void doTask(void));
 
 	void yield(void);
 	void delay(long delay_ms);
