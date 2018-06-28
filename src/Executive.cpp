@@ -5,7 +5,7 @@
  *      Author: jim
  */
 
-#include "executive.h"
+#include "Executive.h"
 
 //------------------------------------------------------------------------------
 struct taskEntry {
@@ -49,16 +49,19 @@ int Executive::addTask(long timeToNext, long interval_ms, void doTask(void)) {
  *
  * @param interval_ms
  * @param doTask
- * @return
+ * @return An index to the task or -1 if task could not be added (no room left in task table)
  */
 int Executive::addTask(long interval_ms, void doTask(void)) {
 	if(nTasks< (sizeof tasks / sizeof tasks[0])) {
-	tasks[nTasks].lastRun_ms = millis();
-	tasks[nTasks].interval_ms = interval_ms;
-	tasks[nTasks].doTask = doTask;
-	nTasks++;
+		tasks[nTasks].lastRun_ms = millis();
+		tasks[nTasks].interval_ms = interval_ms;
+		tasks[nTasks].doTask = doTask;
+
+		return nTasks++;
+	} else {
+		return -1;	// table is full
 	}
-	return nTasks;
+
 }
 
 //------------------------------------------------------------------------------
