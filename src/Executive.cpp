@@ -8,11 +8,11 @@
 #include "executive.h"
 
 //------------------------------------------------------------------------------
-struct taskEntry {
+struct TaskEntry {
 	unsigned long lastRun_ms;
 	unsigned long interval_ms;
 	void *doTask();
-} tasks[DEFAULT_MAX_TASK_ENTRIES];
+} *tasks;
 
 int nTasks = 0;
 
@@ -21,6 +21,7 @@ int nTasks = 0;
  *
  */
 Executive::Executive() {
+	Executive(DEFAULT_MAX_TASK_ENTRIES);
 }
 
 //------------------------------------------------------------------------------
@@ -29,36 +30,52 @@ Executive::Executive() {
  * @param maxTasks
  */
 Executive::Executive(int maxTasks) {
+	tasks = malloc(sizeof *tasks * maxTasks);
+}
+
+//------------------------------------------------------------------------------
+/**
+ */
+Executive::~Executive() {
+	free(tasks);
 }
 
 //------------------------------------------------------------------------------
 /**
  *
- * @param timeToNext
- * @param interval_ms
- * @param doTask
- * @return
+ * @param timeToNext_ms Number of ms until first run of the task to do.  Must be less
+ * than interval_ms otherwise taken as interval_ms
+ * @param interval_ms Interval between successive runs of the task
+ * @param doTask The routine called to do the task
+ * @return An index to the task or -1 if task could not be added (no room left in task table)
  */
-int Executive::addTask(long timeToNext, long interval_ms, void doTask(void)) {
+int Executive::addTask(long timeToNext_ms, long interval_ms, void doTask(void)) {
+	int taskNo = addTask(interval_ms, doTask);
+	if(taskNo<0) return taskNo;
 
+	tasks[taskNo].lastRun_ms = (timeToNext_ms>=interval_ms) ? millis() : millis() - (interval_ms - timeToNext_ms);
 	return 0;
 }
 
 //------------------------------------------------------------------------------
 /**
  *
- * @param interval_ms
- * @param doTask
- * @return
+ * @param interval_ms Interval between successive runs of the task
+ * @param doTask The routine called to do the task
+ * @return An index to the task or -1 if task could not be added (no room left in task table)
  */
 int Executive::addTask(long interval_ms, void doTask(void)) {
+	// TODO - tasks should really be sorted with shortest interval first
 	if(nTasks< (sizeof tasks / sizeof tasks[0])) {
-	tasks[nTasks].lastRun_ms = millis();
-	tasks[nTasks].interval_ms = interval_ms;
-	tasks[nTasks].doTask = doTask;
-	nTasks++;
+		tasks[nTasks].lastRun_ms = millis();
+		tasks[nTasks].interval_ms = interval_ms;
+		tasks[nTasks].doTask = doTask;
+
+		return nTasks++;
+	} else {
+		return -1;	// table is full
 	}
-	return nTasks;
+
 }
 
 //------------------------------------------------------------------------------

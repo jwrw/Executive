@@ -16,8 +16,9 @@ class Executive {
 public:
 	Executive(void);
 	Executive(int maxTasks);
+	~Executive();
 
-	int addTask(long timeToNext, long interval_ms, void doTask(void));
+	int addTask(long timeToNext_ms, long interval_ms, void doTask(void));
 	int addTask(long interval_ms, void doTask(void));
 
 	void yield(void);
