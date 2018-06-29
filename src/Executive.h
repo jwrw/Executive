@@ -9,7 +9,7 @@
 #define EXECUTIVE_H_
 
 const long MIN_YIELD_TIME_MS = 1;
-const int DEFAULT_MAX_TASK_ENTRIES = 10;
+const int DEFAULT_MAX_TASKS = 10;
 
 class Executive {
 
@@ -18,8 +18,7 @@ public:
 	Executive(int maxTasks);
 	~Executive();
 
-	int addTask(unsigned long interval_ms, void doTask(void), unsigned long timeToNext_ms);
-	int addTask(unsigned long interval_ms, void doTask(void));
+	int addTask(unsigned long interval_ms, void (*doTask)(void), unsigned long timeToNext_ms);
 
 	void yield(void);
 	void delay(long delay_ms);

@@ -11,8 +11,8 @@
 struct TaskEntry {
 	unsigned long lastRun_ms;
 	unsigned long interval_ms;
-	void *doTask();
-}*tasks;
+	void (*doTask)(void);
+} *tasks;
 
 int nTasks = 0;
 
@@ -21,7 +21,7 @@ int nTasks = 0;
  *
  */
 Executive::Executive() {
-	Executive(DEFAULT_MAX_TASK_ENTRIES);
+	Executive(DEFAULT_MAX_TASKS);
 }
 
 //------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ Executive::Executive() {
  * @param maxTasks
  */
 Executive::Executive(int maxTasks) {
-	tasks = new struct TaskEntry[maxTasks];
+	tasks = new TaskEntry[maxTasks];
 }
 
 //------------------------------------------------------------------------------
@@ -49,11 +49,11 @@ Executive::~Executive() {
  * @param doTask The routine called to do the task
  * @return An index to the task or -1 if task could not be added (no room left in task table)
  */
-int Executive::addTask(unsigned long interval_ms, void &doTask(void),
+int Executive::addTask(unsigned long interval_ms, void (*doTask)(void),
 		unsigned long timeToNext_ms = 0) {
 	if (nTasks < (sizeof tasks / sizeof tasks[0])) {
 		tasks[nTasks].interval_ms = interval_ms;
-		tasks[nTasks].doTask = &doTask;
+		tasks[nTasks].doTask = doTask;
 		tasks[nTasks].lastRun_ms =
 				(timeToNext_ms >= interval_ms) ?
 						millis() : millis() - (interval_ms - timeToNext_ms);
