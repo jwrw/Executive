@@ -12,9 +12,10 @@ struct TaskEntry {
 	unsigned long lastRun_ms;
 	unsigned long interval_ms;
 	void (*doTask)(void);
+	bool oneShot;
+	bool enabled;
 }*tasks;
 
-int _nTasks = 0;
 int _maxTasks = 0;
 
 //------------------------------------------------------------------------------
@@ -36,6 +37,7 @@ Executive::~Executive() {
 
 //------------------------------------------------------------------------------
 /**
+ * Add a new task to be performed at a regular interval
  *
  * @param timeToNext_ms Number of ms until first run of the task to do.  Must be less
  * than interval_ms otherwise taken as interval_ms
@@ -45,13 +47,46 @@ Executive::~Executive() {
  */
 int Executive::addTask(unsigned long interval_ms, void (*doTask)(void),
 		unsigned long timeToNext_ms) {
-	if (_nTasks < _maxTasks) {
-		tasks[_nTasks].interval_ms = interval_ms;
-		tasks[_nTasks].doTask = doTask;
-		tasks[_nTasks].lastRun_ms =
+	int slot;
+	for(slot=0; slot<_maxTasks; slot++) {
+		if(tasks[slot].doTask==nullptr) break;
+	}
+
+	if (slot < _maxTasks) {
+		tasks[slot].interval_ms = interval_ms;
+		tasks[slot].doTask = doTask;
+		tasks[slot].lastRun_ms =
 				(timeToNext_ms >= interval_ms) ?
 						millis() : millis() - (interval_ms - timeToNext_ms);
-		return _nTasks++;
+		tasks[slot].enabled = true;
+		tasks[slot].oneShot = false;
+		return slot;
+	} else {
+		return -1;
+	}
+}
+
+//------------------------------------------------------------------------------
+/**
+ * Add a new task to be performed just once
+ *
+ * @param timeToNext_ms Number of ms until first run of the task to do.
+ * @param doTask The routine called to do the task
+ * @return An index to the task or -1 if task could not be added (no room left in task table)
+ */
+int Executive::addOneShotTask(void (*doTask)(void), unsigned long timeToNext_ms) {
+	int slot;
+	for(slot=0; slot<_maxTasks; slot++) {
+		if(tasks[slot].doTask==nullptr) break;
+	}
+
+	if (slot < _maxTasks) {
+		tasks[slot].interval_ms = timeToNext_ms;
+		tasks[slot].doTask = doTask;
+		tasks[slot].lastRun_ms = millis();
+		tasks[slot].enabled = true;
+		tasks[slot].oneShot = true;
+		return slot;
 	} else {
 		return -1;
 	}
@@ -99,6 +134,9 @@ void Executive::loop() {
  * or if there are other tasks that individually or in combination might take longer then the interval,
  * then Executive won't be able to keep to the schedule and will work on a 'best endeavours' basis.
  *
+ * One-shot tasks are treated equally to the interval tasks, except that they are removed from the table
+ * immediately before this scheduler runs their doTask() function.
+ *
  * If a task is started and runs beyond the delay_ms window then this Executive::delay()
  * function will itself return as soon as that task completes. In this case no further tasks
  * will be started (even if they were due to run in that delay_ms window).
@@ -128,19 +166,23 @@ void Executive::delay(unsigned long delay_ms) {
 		unsigned long current_ms = millis();// snapshot to treat all tasks equally
 		signed long bestDelta_ms = (signed long) ((tasks[0].lastRun_ms + tasks[0].interval_ms) - current_ms);
 		int topTask = 0;
-		for (int i = 1; i < _nTasks; i++) {
-			unsigned long nextRun_ms = tasks[i].lastRun_ms + tasks[i].interval_ms;
-			signed long delta_ms = (signed long) (nextRun_ms - current_ms);
-			if (delta_ms < bestDelta_ms) {
-				bestDelta_ms = delta_ms;
-				topTask = i;
+		for (int i = 1; i < _maxTasks; i++) {
+			if(tasks[i].doTask != nullptr && tasks[i].enabled) {
+				unsigned long nextRun_ms = tasks[i].lastRun_ms + tasks[i].interval_ms;
+				signed long delta_ms = (signed long) (nextRun_ms - current_ms);
+				if (delta_ms < bestDelta_ms) {
+					bestDelta_ms = delta_ms;
+					topTask = i;
+				}
 			}
 		}
 
 		if(bestDelta_ms<=0) {
 			// task is due or overdue - start immediately
 			tasks[topTask].lastRun_ms = millis();
-			tasks[topTask].doTask();
+			void (*taskFn)(void) = tasks[topTask].doTask;
+			if(tasks[topTask].oneShot) tasks[topTask].doTask = nullptr;
+			taskFn();
 			::yield();
 			// Is there no more time left to do more?
 			if(((signed long)(start_ms + delay_ms - millis())) <= 0) {
@@ -166,6 +208,103 @@ void Executive::delay(unsigned long delay_ms) {
 	} while (true);
 }
 //------------------------------------------------------------------------------
+/**
+ * Enable the specified task and make eligible to run immediately
+ *
+ * Task can be one-shot or continuous but must have been set up previously.
+ * @param taskNo Number of the task that is to be enabled.  The task number is returned from addTask() and addOnShotTask().
+ * @return The task no or -1 if the taskNo was not a valid task
+ */
+int Executive::enableTask(int taskNo) {
+	if(taskNo>=_maxTasks || taskNo<0 || tasks[taskNo].doTask==nullptr) return -1;
+
+	tasks[taskNo].lastRun_ms = millis() - tasks[taskNo].interval_ms;
+	tasks[taskNo].enabled = true;
+	return taskNo;
+}
+//------------------------------------------------------------------------------
+/**
+ * Disable the specified task from being scheduled (run)
+ *
+ * Task can be one-shot or continuous but must have been set up previously.  If the task is one-shot then
+ * it must be disabled before it first runs or this routine will return -1. One-shot tasks are deleted from the
+ * table immediately before they are run.
+ * @param taskNo Number of the task that is to be disabled.  The task number is returned from addTask() and addOnShotTask().
+ * @return The task no or -1 if the taskNo was not a valid task
+ */
+int disableTask(int taskNo) {
+	if(taskNo>=_maxTasks || taskNo<0 || tasks[taskNo].doTask==nullptr) return -1;
+	tasks[taskNo].enabled = false;
+	return taskNo;
+}
+//------------------------------------------------------------------------------
+/**
+ * Modify the interval at which a task runs or the time until a one-shot is executed
+ *
+ * For continuously running tasks, only the interval is changed, so if it is shortened,
+ * the task may immediately become eligible to run (during the next yield() or delay()).
+ *
+ * For one-shot tasks, the 'timer' is reset so it will become eligible after the new
+ * interval_ms period.
+ *
+ * @param taskNo
+ * @param interval_ms
+ * @return The task no or -1 if the taskNo was not a valid task
+ */
+int Executive::modifyTaskInterval(int taskNo, unsigned long interval_ms) {
+	if(taskNo>=_maxTasks || taskNo<0 || tasks[taskNo].doTask==nullptr) return -1;
+	tasks[taskNo].interval_ms = interval_ms;
+	if(tasks[taskNo].oneShot) tasks[taskNo].lastRun_ms = millis();
+	return taskNo;
+}
+
+//------------------------------------------------------------------------------
+/**
+ * Change the time at which the task will next run
+ *
+ * Note that for one-shot tasks, this behaves the same as modifyTaskInterval()
+ * and the internal 'timer' is effectively reset.
+ *
+ * For continuously running tasks, the timeToNext_ms should be less than or equal to the interval_ms for
+ * the task.  If greater, then interval_ms is used.
+ *
+ * @param taskNo
+ * @param timeToNext_ms
+ * @return The task no or -1 if the taskNo was not a valid task
+ */
+int Executive::modifyTaskNextRun(int taskNo, unsigned long timeToNext_ms) {
+	if(taskNo>=_maxTasks || taskNo<0 || tasks[taskNo].doTask==nullptr) return -1;
+	if(tasks[taskNo].oneShot) {
+		tasks[taskNo].interval_ms = timeToNext_ms;
+		tasks[taskNo].lastRun_ms = millis();
+	} else {
+		if(timeToNext_ms>tasks[taskNo].interval_ms) timeToNext_ms = tasks[taskNo].interval_ms;
+		tasks[taskNo].lastRun_ms = millis() - (tasks[taskNo].interval_ms - timeToNext_ms);
+	}
+	return taskNo;
+}
+
+//------------------------------------------------------------------------------
+/**
+ * Immediately removes a task from the task schedule
+ *
+ * Note that this doesn't stop a running task, it will just prevent the task from
+ * being run again.
+ *
+ * After removing a task, its taskNo is not longer valid and should be discarded
+ * as the taskNo may get re-used on a subsequent call to addTask().
+ *
+ * @param taskNo
+ * @return The task no of the removed task (which is no longer useful) or -1 if the taskNo was not a valid task.
+ */
+int Executive::removeTask(int taskNo) {
+	if(taskNo>=_maxTasks || taskNo<0 || tasks[taskNo].doTask==nullptr) return -1;
+	tasks[taskNo].doTask = nullptr;	// this flags the slot is free
+	tasks[taskNo].enabled = false;	// extra insurance
+	return taskNo;
+}
+//------------------------------------------------------------------------------
+
 #if !defined(NO_GLOBAL_INSTANCES)
-Executive Exec(10);
+Executive Exec(DEFAULT_MAX_TASKS);
 #endif

@@ -11,7 +11,7 @@
 #include "Arduino.h"
 
 const long MIN_YIELD_TIME_MS = 1;
-const int DEFAULT_MAX_TASKS = 10;
+const int DEFAULT_MAX_TASKS = 20;
 
 class Executive {
 
@@ -22,6 +22,13 @@ public:
 	~Executive();
 
 	int addTask(unsigned long interval_ms, void (*doTask)(void), unsigned long timeToNext_ms = 0);
+	int addOneShotTask(void (*doTask)(void), unsigned long timeToNext_ms = 0);
+
+	int enableTask(int taskNo);
+	int disableTask(int taskNo);
+	int modifyTaskInterval(int taskNo, unsigned long interval_ms);
+	int modifyTaskNextRun(int taskNo, unsigned long timeToNext_ms);
+	int removeTask(int taskNo);
 
 	void yield(void);
 	void delay(unsigned long delay_ms);

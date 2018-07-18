@@ -13,3 +13,6 @@ b) Call the Exec.delay() or Exec.run() functions on a regular basis (as oftem as
 c) The appropriate scheduled functions will be called during your Exec.delay() or Exec.run() functions.
 
 d) Enjoy
+
+In use, it soon became clear that a few other functions would be useful. So the library now allows tasks to be enabled/disabled, deleted and 'one-shot' tasks that
+delete themselves after use.
