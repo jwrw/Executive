@@ -164,9 +164,9 @@ void Executive::delay(unsigned long delay_ms) {
 
 	do {
 		unsigned long current_ms = millis();// snapshot to treat all tasks equally
-		signed long bestDelta_ms = (signed long) ((tasks[0].lastRun_ms + tasks[0].interval_ms) - current_ms);
-		int topTask = 0;
-		for (int i = 1; i < _maxTasks; i++) {
+		signed long bestDelta_ms = 0x7fffffffL;
+		int topTask = -1;
+		for (int i = 0; i < _maxTasks; i++) {
 			if(tasks[i].doTask != nullptr && tasks[i].enabled) {
 				unsigned long nextRun_ms = tasks[i].lastRun_ms + tasks[i].interval_ms;
 				signed long delta_ms = (signed long) (nextRun_ms - current_ms);
@@ -175,6 +175,11 @@ void Executive::delay(unsigned long delay_ms) {
 					topTask = i;
 				}
 			}
+		}
+
+		if(topTask==-1) {
+			// no tasks in task list - so behave as if nothing to do for a short time
+			bestDelta_ms = MIN_YIELD_TIME_MS;
 		}
 
 		if(bestDelta_ms<=0) {
@@ -189,7 +194,7 @@ void Executive::delay(unsigned long delay_ms) {
 				break;
 			}
 		} else {
-			// next task is in the future
+			// next task is in the future 
 			signed long deltaToEnd_ms = (signed long)(start_ms + delay_ms - millis());
 			if(delay_ms != DELAY_FOREVER && bestDelta_ms >= deltaToEnd_ms) {
 				// next task to run won't fall in the current delay_ms window
