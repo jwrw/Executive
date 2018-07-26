@@ -26,6 +26,10 @@ int _maxTasks = 0;
 Executive::Executive(int maxTasks) {
 	_maxTasks = maxTasks;
 	tasks = new TaskEntry[maxTasks];
+	for(int slot=0; slot<_maxTasks; slot++) {
+		tasks[slot].doTask = nullptr;
+		tasks[slot].enabled = false;
+	}
 }
 
 //------------------------------------------------------------------------------

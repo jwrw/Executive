@@ -6,7 +6,7 @@
 //
 // The output is best viewed in the Arduino IDE's Serial Plotter which shows the tasks
 // running (they each use a fixed delay() in this example). The trace also shows a
-// 'blip' each time the Exec.delay() is called.
+// 'blip' after each time the Exec.delay() is called.
 //
 // Notice the tasks keep to a steady schedule but that only one task is running at
 // any one time.  This means that tasks may be blocked until another task completes.
@@ -97,6 +97,10 @@ void doTask5() {
 	task5 = false;
 }
 
+// This is an 'Interrupt Service Routine' (ISR) that gets called
+// each time the Timer1 timer expires.
+// Please note, ISRs should be very short and using Serial inside one
+// is best avoided.  We've done it here to keep the code simple.
 void doOutput() {
 	noInterrupts();
 	bool t1 = task1;
@@ -106,19 +110,19 @@ void doOutput() {
 	bool t5 = task5;
 	interrupts();
 
-	Serial.print((t1)?1:0);
+	Serial.print((t1) ? 1 : 0);
 	Serial.print(",");
-	Serial.print((t2)?3:2);
+	Serial.print((t2) ? 3 : 2);
 	Serial.print(",");
-	Serial.print((t3)?5:4);
+	Serial.print((t3) ? 5 : 4);
 	Serial.print(",");
-	Serial.print((t4)?7:6);
+	Serial.print((t4) ? 7 : 6);
 	Serial.print(",");
-	Serial.println((t5)?9:8);
+	Serial.println((t5) ? 9 : 8);
 }
 
 // This is put after all the 'doTask' routines have been defined
-// (alternatively you need to declare the 'doTask' machines near the top of the module
+// (alternatively you need to declare the 'doTask' routines near the top of the module
 // which is one of those messy C++ things that Arduino normally hides from you)
 void setupTasks() {
 	Exec.addTask(25, doTask1);

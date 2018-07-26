@@ -7,6 +7,11 @@
   pin the on-board LED is connected to on your Arduino model, check
   the documentation at http://www.arduino.cc
 
+  This is a better version of the ExecBlink example and uses a
+  one-shot task to turn off the LED.  It's overkill in this example but
+  in a complex sketch it's a really good way to get something to happen in the future
+  without having to check and manage it in your code.
+
   This example code is in the public domain.
  */
 
@@ -14,7 +19,8 @@
 
 // Use names not numbers - then there is only one place you need to change it
 const int PIN = 13;	// 'normal' Arduino
-//const int PIN = 17;	// Sparkfun Pro Micro
+// const int PIN = 17;	// Sparkfun Pro Micro
+
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -30,18 +36,21 @@ void loop() {
 	Exec.loop();	// Hand control over to Exec (never returns)
 }
 
-void turnOn() {
-	Serial.println("On");
-	digitalWrite(PIN, LOW);
+void turnOff() {
+	digitalWrite(PIN, HIGH);
 }
 
-void turnOff() {
-	Serial.println("Off");
-	digitalWrite(PIN, HIGH);
+// note that the turnOn() function references the turnOff() function
+// To avoid Arduino compile errors it is placed after the turnOff() function definition.
+// [There are other, more robust, ways to accomplish the same thing
+//  (see topics such as 'declaring functions').
+//  Arduino normally hides this messiness from you.]
+void turnOn() {
+	digitalWrite(PIN, LOW);
+	Exec.addOneShotTask(turnOff, 1000);  // Turn off after a second
 }
 
 // Put this at the end of your sketch
 void setupTasks() {
 	Exec.addTask(2000, turnOn);	// Turn on every 2s
-	Exec.addTask(2000, turnOff, 1000);  // Turn off every 2s, but start 1s later
 }

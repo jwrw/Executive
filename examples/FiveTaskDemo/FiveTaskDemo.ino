@@ -4,14 +4,30 @@
 //
 // Run five tasks at a variety of intervals
 //
-// The output is best viewed in the Serial Plotter which shows the tasks being called
+// The output is best viewed in the Serial Plotter which shows the tasks being called.
+// It shows a 'blip' each time an Exec.delay() in the loop() has completed
+//
+// Notice the tasks keep to a steady schedule but that only one task is running at
+// any one time.  This means that tasks may be blocked until another task completes.
+//
+// Keep the tasks with the shorter time periods at the top of the list to give them
+// first chance when you call Exec.delay() and greater likelihood to run closer to their
+// schedule. Other than that, Exec tries to just work on a first come, first served basis
+// but if one of the tasks takes a long time to complete then all the other tasks should
+// get a go before that task is next run.  If a task's desired run time is passed
+// whilst Exec is calling a long running task or outside of the call to Exec.delay()
+// then there is no concept of 'catching up'.  The task just gets run (once) when Exec is
+// able to run it and Exec will aim to run it again after its defined time interval.
+//
+// Exec will run all the tasks at least once that are ready for execution on each call to Exec.delay()
+// As Exec is dependent on task execution times, the actual delay you get may be more than you requested;
+// it will never be less than you requested.
+
 //
 // See also FiveTaskDemoInterrupted for a more complex example that does a 
 // more sophisticated display
 
 #include <Executive.h>
-
-unsigned long start_ms = millis();
 
 //The setup function is called once at startup of the sketch
 void setup() {
@@ -64,7 +80,7 @@ void doTask5() {
 }
 
 // This is put after all the 'doTask' routines have been defined
-// (alternatively you need to declare the 'doTask' machines near the top of the module
+// (alternatively you need to declare the 'doTask' routines near the top of the module
 // which is one of those messy C++ things that Arduino normally hides from you)
 void setupTasks() {
 	Exec.addTask(25, doTask1);
