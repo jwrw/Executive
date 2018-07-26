@@ -1,5 +1,5 @@
 #######################################
-# Syntax Colouring Map For ESP_EEPROM
+# Syntax Colouring Map For Executive
 #######################################
 
 #######################################
@@ -12,20 +12,24 @@ Executive	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-doSomething	KEYWORD2
-begin	KEYWORD2
-read	KEYWORD2
-write	KEYWORD2
-commit	KEYWORD2
-commitReset	KEYWORD2
-wipe	KEYWORD2
-percentUsed	KEYWORD2
-end	KEYWORD2
+addTask	KEYWORD2
+addOneShotTask	KEYWORD2
+enableTask	KEYWORD2
+disableTask	KEYWORD2
+modifyTaskInterval	KEYWORD2
+modifyTaskNextRun	KEYWORD2
+yield	KEYWORD2
+delay	KEYWORD2
+loop	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)
 #######################################
 
+Exec	KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+DELAY_FOREVER	LITERAL1
