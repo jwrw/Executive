@@ -2,7 +2,7 @@
  * executive.h
  *
  *  Created on: 26 Jun 2018
- *      Author: jim
+ *      Author: j-watson
  */
 
 #ifndef EXECUTIVE_H_
@@ -10,12 +10,23 @@
 
 #include "Arduino.h"
 
+/**
+ * The yield() function is actually the same as a short delay() of this number of ms
+ */
 const long MIN_YIELD_TIME_MS = 1;
+
+/**
+ * The library maintains a fixed-size table of tasks so needs to know the
+ * size of this.  If the caller doesn't specify anything then this size is used
+ */
 const int DEFAULT_MAX_TASKS = 20;
 
 class Executive {
 
 public:
+	/**
+	 * Use in a call to Exec.delay() this will cause an infinite delay.
+	 */
 	const unsigned long DELAY_FOREVER = -1L;
 
 	Executive(int maxTasks = DEFAULT_MAX_TASKS);

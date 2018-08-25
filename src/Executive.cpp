@@ -2,7 +2,7 @@
  * Executive.cpp
  *
  *  Created on: 26 Jun 2018
- *      Author: jim
+ *      Author: j-watson
  */
 
 #include "Executive.h"
@@ -20,8 +20,9 @@ int _maxTasks = 0;
 
 //------------------------------------------------------------------------------
 /**
+ * Construct the Exec object with a specified size of task table
  *
- * @param maxTasks
+ * @param maxTasks The maximum number of tasks (enabled+disabled) in the task list.
  */
 Executive::Executive(int maxTasks) {
 	_maxTasks = maxTasks;
@@ -34,6 +35,7 @@ Executive::Executive(int maxTasks) {
 
 //------------------------------------------------------------------------------
 /**
+ * Default destructor
  */
 Executive::~Executive() {
 	delete[] tasks;
@@ -98,7 +100,10 @@ int Executive::addOneShotTask(void (*doTask)(void), unsigned long timeToNext_ms)
 
 //------------------------------------------------------------------------------
 /**
+ * Run the task that is most overdue to run.
  *
+ * Only the most overdue task is run.  If there are no overdue tasks this routine
+ * returns after a short delay (MIN_YIELD_TIME_MS).
  */
 void Executive::yield(void) {
 	Executive::delay(MIN_YIELD_TIME_MS);
@@ -241,7 +246,7 @@ int Executive::enableTask(int taskNo) {
  * @param taskNo Number of the task that is to be disabled.  The task number is returned from addTask() and addOnShotTask().
  * @return The task no or -1 if the taskNo was not a valid task
  */
-int disableTask(int taskNo) {
+int Executive::disableTask(int taskNo) {
 	if(taskNo>=_maxTasks || taskNo<0 || tasks[taskNo].doTask==nullptr) return -1;
 	tasks[taskNo].enabled = false;
 	return taskNo;
