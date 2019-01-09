@@ -2,7 +2,7 @@
 A really simple to use library to run (execute) repetitive tasks and one-off tasks that will run after a specified delay.
 
 This library doesn't use interrupts or try to do any pseudo-parallel running it just
-Does the best it can to keep your tasks running to a schedule.
+does the best it can to keep your tasks running to a schedule.
 Your program needs to pass control over to Exec for a period of time (e.g. using the 
 Exec.delay() function) and the library will run any of your tasks that are already due to run or that fall due to run during that period.
 Even if some of your tasks take a long time then the library will just do its best to execute tasks
