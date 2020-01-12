@@ -41,6 +41,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="class_executive-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Executive Class Reference</div>  </div>
@@ -80,6 +81,11 @@ Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ac24106308357647b7b79c9c384a1ab94"><td class="memItemLeft" align="right" valign="top">const unsigned long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_executive.html#ac24106308357647b7b79c9c384a1ab94">DELAY_FOREVER</a> = -1L</td></tr>
 <tr class="separator:ac24106308357647b7b79c9c384a1ab94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a81ff810ad29fa799f0463d8f21d74991"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_executive.html#a81ff810ad29fa799f0463d8f21d74991">addTask</a> (unsigned long interval_ms, void(*doTask)(void), unsigned long timeToNext_ms, bool oneShot)</td></tr>
+<tr class="separator:a81ff810ad29fa799f0463d8f21d74991"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a8532e6a2b370021ebeb563130cc5fd43"></a>
@@ -97,13 +103,9 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Construct the Exec object with a specified size of task table</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">maxTasks</td><td>The maximum number of tasks (enabled+disabled) in the task list. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Construct the Exec object</p>
+<p>For Arduino, you should not need to use this constructor. When you include the header file (<a class="el" href="_executive_8h.html">Executive.h</a>) in your sketch you will automatically get a global variable 'Exec' that you use to access the library functions.</p>
+<p>V 1.1.0 The table now dynamically grows. MaxTasks is now the initial size of the allocated table (optional) </p>
 
 </div>
 </div>
@@ -121,7 +123,8 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Default destructor </p>
+<p>Default destructor</p>
+<p>Unless you have created an instance of <a class="el" href="class_executive.html">Executive</a> yourself (via 'new') you are unlikely to need to use this yourself. </p>
 
 </div>
 </div>
@@ -151,7 +154,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a new task to be performed just once</p>
+<p>Add a task to be performed just once</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timeToNext_ms</td><td>Number of ms until first run of the task to do. </td></tr>
@@ -159,12 +162,12 @@ Public Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An index to the task or -1 if task could not be added (no room left in task table) </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An index to the task or -1 if task could not be added (no room left for the required task table) </dd></dl>
 
 </div>
 </div>
 <a id="aa52b5408a6c96b18ae9ccb9c54f74cac"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa52b5408a6c96b18ae9ccb9c54f74cac">&#9670;&nbsp;</a></span>addTask()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa52b5408a6c96b18ae9ccb9c54f74cac">&#9670;&nbsp;</a></span>addTask() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -194,7 +197,7 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Add a new task to be performed at a regular interval</p>
+<p>Add a task to be performed at a regular interval</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">timeToNext_ms</td><td>Number of ms until first run of the task to do. Must be less than interval_ms otherwise taken as interval_ms </td></tr>
@@ -203,7 +206,66 @@ Public Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>An index to the task or -1 if task could not be added (no room left in task table) </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>An index to the task or -1 if task could not be added (no room left the required task table) </dd></dl>
+
+</div>
+</div>
+<a id="a81ff810ad29fa799f0463d8f21d74991"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81ff810ad29fa799f0463d8f21d74991">&#9670;&nbsp;</a></span>addTask() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Executive::addTask </td>
+          <td>(</td>
+          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramname"><em>interval_ms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void(*)(void)&#160;</td>
+          <td class="paramname"><em>doTask</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned long&#160;</td>
+          <td class="paramname"><em>timeToNext_ms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>oneShot</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Add a task (internal routine)</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">timeToNext_ms</td><td>Number of ms until first run of the task to do. Must be less than interval_ms otherwise taken as interval_ms </td></tr>
+    <tr><td class="paramname">interval_ms</td><td>Interval between successive runs of the task </td></tr>
+    <tr><td class="paramname">doTask</td><td>The routine called to do the task </td></tr>
+    <tr><td class="paramname">oneShot</td><td>True if this is to be a one-shot task </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>An index to the task or -1 if the task list could not be expanded </dd></dl>
 
 </div>
 </div>
@@ -228,7 +290,7 @@ Public Attributes</h2></td></tr>
 <p>Immediately before running a task, the time at it is started is recorded. The desired time of the next execution will be based on the actual time at which the task is started and the task interval. There is no account taken of whether the task was late in starting. This effectively means that the task interval is a minimum setting for the amount of time between successive calls to the task function. In the best case, where the <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> function has control for most of the time and other scheduled functions don't interfere, the interval time will be honoured and the task will operate at the requested interval. If the sketch spends a lot of its time outside the <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> function or if there are other tasks that individually or in combination might take longer then the interval, then <a class="el" href="class_executive.html">Executive</a> won't be able to keep to the schedule and will work on a 'best endeavours' basis.</p>
 <p>One-shot tasks are treated equally to the interval tasks, except that they are removed from the table immediately before this scheduler runs their doTask() function.</p>
 <p>If a task is started and runs beyond the delay_ms window then this <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">Executive::delay()</a> function will itself return as soon as that task completes. In this case no further tasks will be started (even if they were due to run in that delay_ms window).</p>
-<p>If, when <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> is called, there is a backlog of tasks that are due to be run, then the tasks get run in the order of their desired run time. Again, if the end of the delay_ms is reached, then the <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> function will return as soon as the current task finishes, even if there are other back-logged or due to run tasks. This behaviour does ensure that if there is a backlog of tasks then at least one of these will get run for any call to <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a>.</p>
+<p>If, when <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> is called, there is a backlog of tasks that are due to be run, then the tasks get run in the order of their desired run time. Again, if the end of the delay_ms is reached, then the <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> function will return as soon as the current task finishes, even if there are other back-logged or due to run tasks-&gt; This behaviour does ensure that if there is a backlog of tasks then at least one of these will get run for any call to <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a>.</p>
 <p>If there are no tasks due to run in the requested delay_ms window then the <a class="el" href="class_executive.html">Executive</a>:<a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> function just behaves like a standard <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a> function.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -338,7 +400,7 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 <p>Modify the interval at which a task runs or the time until a one-shot is executed</p>
 <p>For continuously running tasks, only the interval is changed, so if it is shortened, the task may immediately become eligible to run (during the next <a class="el" href="class_executive.html#a3ff32f202e1d5831b36c0444a0a76937">yield()</a> or <a class="el" href="class_executive.html#a67390d94965f57eccb526d7c04eb55ad">delay()</a>).</p>
-<p>For one-shot tasks, the 'timer' is reset so it will become eligible after the new interval_ms period.</p>
+<p>For one-shot tasks, the 'timer' is reset so it will become eligible after the interval_ms period.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">taskNo</td><td></td></tr>

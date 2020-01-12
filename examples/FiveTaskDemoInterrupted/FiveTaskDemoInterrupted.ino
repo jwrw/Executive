@@ -4,9 +4,9 @@
 //
 // Run five tasks at a variety of intervals
 //
-// The output is best viewed in the Arduino IDE's Serial Plotter which shows the tasks
-// running (they each use a fixed delay() in this example). The trace also shows a
-// 'blip' after each time the Exec.delay() is called.
+// The output is designed to be viewed in the Arduino IDE's Serial Plotter which shows the tasks
+// running (they each use a different fixed delay() in this example). The trace also shows a
+// 'blip' after each time the Exec.delay() is called. It's probably clearer if you give it a try!
 //
 // Notice the tasks keep to a steady schedule but that only one task is running at
 // any one time.  This means that tasks may be blocked until another task completes.
@@ -27,6 +27,7 @@
 #include <Executive.h>
 #include <TimerOne.h>
 
+// These flags are set 'true' by our code whilst the corresponding task is running
 volatile bool task1, task2, task3, task4, task5;
 
 //The setup function is called once at startup of the sketch
@@ -43,7 +44,9 @@ void setup() {
 // You can hand over to Exec in big chunks of time
 // or in much smaller ones - it depends if you
 // need to do anything else in your loop() function but
-// in many cases you won't.
+// in many cases you won't. Various delay settings are
+// demonstrated below to show how the overall task schedule
+// is maintained, irrespective of the delay.
 void loop() {
 	// Hand control to the executive for 2 seconds
 	Exec.delay(2000);
