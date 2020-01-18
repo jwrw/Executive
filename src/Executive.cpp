@@ -89,10 +89,10 @@ SimpleVector<TaskEntry> *tasks;
 //------------------------------------------------------------------------------
 /**
  * Construct the Exec object
- * 
+ *
  * For Arduino, you should not need to use this constructor.  When you
  * include the header file (Executive.h) in your sketch you will automatically
- * get a global variable 'Exec' that you use to access the library functions. 
+ * get a global variable 'Exec' that you use to access the library functions.
  *
  * V 1.1.0 The table now dynamically grows. MaxTasks is now the initial size of
  * the allocated table (optional)
@@ -104,7 +104,7 @@ Executive::Executive(int maxTasks) {
 //------------------------------------------------------------------------------
 /**
  * Default destructor
- * 
+ *
  * Unless you have created an instance of Executive yourself (via 'new') you
  * are unlikely to need to use this yourself.
  */
@@ -123,14 +123,15 @@ Executive::~Executive() { delete tasks; }
  */
 int Executive::addTask(unsigned long interval_ms, void (*doTask)(void),
                        unsigned long timeToNext_ms, bool oneShot) {
-  int slot;
-  TaskEntry t = {.interval_ms = interval_ms,
-                 .doTask = doTask,
-                 .lastRun_ms = (timeToNext_ms >= interval_ms)
-                                   ? millis()
-                                   : millis() - (interval_ms - timeToNext_ms),
-                 .enabled = true,
-                 .oneShot = oneShot};
+  size_t slot;
+  TaskEntry t;
+  t.interval_ms = interval_ms;
+  t.doTask = doTask;
+  t.lastRun_ms = (timeToNext_ms >= interval_ms)
+                     ? millis()
+                     : millis() - (interval_ms - timeToNext_ms);
+  t.enabled = true;
+  t.oneShot = oneShot;
 
   for (slot = 0; slot < tasks->size(); slot++) {
     if ((*tasks)[slot].doTask == nullptr) {
@@ -176,7 +177,6 @@ int Executive::addTask(unsigned long interval_ms, void (*doTask)(void),
  */
 int Executive::addOneShotTask(void (*doTask)(void),
                               unsigned long timeToNext_ms) {
-  int slot;
   return addTask(timeToNext_ms, doTask, timeToNext_ms, true);
 }
 
@@ -261,7 +261,7 @@ void Executive::delay(unsigned long delay_ms) {
     unsigned long current_ms = millis();  // snapshot to treat all tasks equally
     signed long bestDelta_ms = 0x7fffffffL;
     int topTask = -1;
-    for (int i = 0; i < tasks->size(); i++) {
+    for (size_t i = 0; i < tasks->size(); i++) {
       if ((*tasks)[i].doTask != nullptr && (*tasks)[i].enabled) {
         unsigned long nextRun_ms =
             (*tasks)[i].lastRun_ms + (*tasks)[i].interval_ms;
@@ -318,7 +318,7 @@ void Executive::delay(unsigned long delay_ms) {
  * @return The task no or -1 if the taskNo was not a valid task
  */
 int Executive::enableTask(int taskNo) {
-  if (taskNo >= tasks->size() || taskNo < 0 ||
+  if (taskNo >= (int)tasks->size() || taskNo < 0 ||
       (*tasks)[taskNo].doTask == nullptr)
     return -1;
 
@@ -339,7 +339,7 @@ int Executive::enableTask(int taskNo) {
  * @return The task no or -1 if the taskNo was not a valid task
  */
 int Executive::disableTask(int taskNo) {
-  if (taskNo >= tasks->size() || taskNo < 0 ||
+  if (taskNo >= (int)tasks->size() || taskNo < 0 ||
       (*tasks)[taskNo].doTask == nullptr)
     return -1;
   (*tasks)[taskNo].enabled = false;
@@ -362,7 +362,7 @@ int Executive::disableTask(int taskNo) {
  * @return The task no or -1 if the taskNo was not a valid task
  */
 int Executive::modifyTaskInterval(int taskNo, unsigned long interval_ms) {
-  if (taskNo >= tasks->size() || taskNo < 0 ||
+  if (taskNo >= (int)tasks->size() || taskNo < 0 ||
       (*tasks)[taskNo].doTask == nullptr)
     return -1;
   (*tasks)[taskNo].interval_ms = interval_ms;
@@ -385,7 +385,7 @@ int Executive::modifyTaskInterval(int taskNo, unsigned long interval_ms) {
  * @return The task no or -1 if the taskNo was not a valid task
  */
 int Executive::modifyTaskNextRun(int taskNo, unsigned long timeToNext_ms) {
-  if (taskNo >= tasks->size() || taskNo < 0 ||
+  if (taskNo >= (int)tasks->size() || taskNo < 0 ||
       (*tasks)[taskNo].doTask == nullptr)
     return -1;
   if ((*tasks)[taskNo].oneShot) {
@@ -415,7 +415,7 @@ int Executive::modifyTaskNextRun(int taskNo, unsigned long timeToNext_ms) {
  * the taskNo was not a valid task.
  */
 int Executive::removeTask(int taskNo) {
-  if (taskNo >= tasks->size() || taskNo < 0 ||
+  if (taskNo >= (int)tasks->size() || taskNo < 0 ||
       (*tasks)[taskNo].doTask == nullptr)
     return -1;
   (*tasks)[taskNo].doTask = nullptr;  // this flags the slot is free
